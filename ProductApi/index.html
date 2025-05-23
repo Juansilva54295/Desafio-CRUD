@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD de Produtos</title>
+    <style>
+        body { font-family: sans-serif; }
+        #product-list { margin-top: 20px; border: 1px solid #ccc; padding: 10px; }
+        .product-item { border-bottom: 1px dashed #eee; padding: 5px 0; }
+        .product-item:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <h1>CRUD de Produtos</h1>
+
+    <div>
+        <h2>Adicionar Produto</h2>
+        <label for="add-name">Nome:</label>
+        <input type="text" id="add-name"><br><br>
+        <label for="add-description">Descrição:</label>
+        <input type="text" id="add-description"><br><br>
+        <label for="add-price">Preço:</label>
+        <input type="number" id="add-price"><br><br>
+        <button onclick="addProduct()">Adicionar</button>
+    </div>
+
+    <div id="product-list">
+        <h2>Lista de Produtos</h2>
+        <ul id="products"></ul>
+        <button onclick="loadProducts()">Carregar Produtos</button>
+    </div>
+
+    <div>
+        <h2>Detalhes do Produto</h2>
+        <label for="get-id">ID:</label>
+        <input type="number" id="get-id">
+        <button onclick="getProduct()">Buscar</button>
+        <div id="product-details"></div>
+    </div>
+
+    <div>
+        <h2>Atualizar Produto</h2>
+        <label for="update-id">ID:</label>
+        <input type="number" id="update-id"><br><br>
+        <label for="update-name">Nome:</label>
+        <input type="text" id="update-name"><br><br>
+        <label for="update-description">Descrição:</label>
+        <input type="text" id="update-description"><br><br>
+        <label for="update-price">Preço:</label>
+        <input type="number" id="update-price"><br><br>
+        <button onclick="updateProduct()">Atualizar</button>
+    </div>
+
+    <div>
+        <h2>Deletar Produto</h2>
+        <label for="delete-id">ID:</label>
+        <input type="number" id="delete-id">
+        <button onclick="deleteProduct()">Deletar</button>
+        <div id="delete-status"></div>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:5158/api/products';
+        async function loadProducts() {
+            const response = await fetch(apiUrl);
+            const products = await response.json();
+            const productsList = document.getElementById('products');
+            productsList.innerHTML = '';
+            products.forEach(product => {
+                const listItem = document.createElement('li');
+                listItem.className = 'product-item';
+                listItem.textContent = `${product.name} (ID: ${product.id}, Preço: ${product.price})`;
+                productsList.appendChild(listItem);
+            });
+        }
+
+        async function addProduct() {
+            const name = document.getElementById('add-name').value;
+            const description = document.getElementById('add-description').value;
+            const price = parseFloat(document.getElementById('add-price').value);
+            const product = { name, description, price };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(product)
+            });
+
+            if (response.ok) {
+                alert('Produto adicionado com sucesso!');
+                loadProducts();
+                document.getElementById('add-name').value = '';
+                document.getElementById('add-description').value = '';
+                document.getElementById('add-price').value = '';
+            } else {
+                alert('Erro ao adicionar produto.');
+            }
+        }
+
+        async function getProduct() {
+            const id = document.getElementById('get-id').value;
+            const response = await fetch(`${apiUrl}/${id}`);
+            const detailsDiv = document.getElementById('product-details');
+            if (response.ok) {
+                const product = await response.json();
+                detailsDiv.textContent = `Nome: ${product.name}, Descrição: ${product.description}, Preço: ${product.price}`;
+            } else if (response.status === 404) {
+                detailsDiv.textContent = 'Produto não encontrado.';
+            } else {
+                detailsDiv.textContent = 'Erro ao buscar produto.';
+            }
+        }
+
+        async function updateProduct() {
+            const id = document.getElementById('update-id').value;
+            const name = document.getElementById('update-name').value;
+            const description = document.getElementById('update-description').value;
+            const price = parseFloat(document.getElementById('update-price').value);
+            const product = { id: parseInt(id), name, description, price };
+
+            const response = await fetch(`${apiUrl}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(product)
+            });
+
+            if (response.status === 204) {
+                alert('Produto atualizado com sucesso!');
+                loadProducts();
+                document.getElementById('update-id').value = '';
+                document.getElementById('update-name').value = '';
+                document.getElementById('update-description').value = '';
+                document.getElementById('update-price').value = '';
+            } else if (response.status === 404) {
+                alert('Produto não encontrado para atualizar.');
+            } else {
+                alert('Erro ao atualizar produto.');
+            }
+        }
+
+        async function deleteProduct() {
+            const id = document.getElementById('delete-id').value;
+            const response = await fetch(`${apiUrl}/${id}`, {
+                method: 'DELETE'
+            });
+            const deleteStatus = document.getElementById('delete-status');
+            if (response.status === 204) {
+                alert('Produto deletado com sucesso!');
+                loadProducts();
+                document.getElementById('delete-id').value = '';
+                deleteStatus.textContent = '';
+            } else if (response.status === 404) {
+                deleteStatus.textContent = 'Produto não encontrado para deletar.';
+            } else {
+                deleteStatus.textContent = 'Erro ao deletar produto.';
+            }
+        }
+
+        loadProducts();
+    </script>
+</body>
+</html>
