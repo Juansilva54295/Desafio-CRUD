@@ -14,12 +14,11 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://127.0.0.1:5500")
+        builder.WithOrigins("http://localhost:5173") 
                .AllowAnyHeader()
                .AllowAnyMethod();
     });
 });
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -28,9 +27,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors(); // Adicione esta linha aqui ANTES de app.UseHttpsRedirection()
+app.UseCors(); 
 app.UseHttpsRedirection();
-app.UseStaticFiles(); // Adicione esta linha aqui
+app.UseStaticFiles(); 
 app.MapControllers();
 
 var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
